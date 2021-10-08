@@ -7,5 +7,13 @@ module.exports = {
   },
   transpileDependencies: [
     'quasar'
-  ]
+  ],
+  devServer: {
+    proxy: {
+      '/api': {
+        target: 'https://asia-east1-mpwei-logistics-system.cloudfunctions.net',
+        pathRewrite: { '^/api': '' }
+      }
+    }
+  },
 }
