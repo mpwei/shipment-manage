@@ -10,6 +10,7 @@ const Routes = [
             { path: '/device', component: () => import('../page/device') },
             { path: '/record', component: () => import('../page/record') },
             { path: '/settings', component: () => import('../page/settings') },
+            { path: '/qrcode', component: () => import('../page/qrcode') },
             { path: '/create', component: () => import('../page/create') }
         ]
     },

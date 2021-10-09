@@ -9,10 +9,11 @@ module.exports = {
     'quasar'
   ],
   devServer: {
+    before: require('./server/entrance'),
     proxy: {
-      '/api': {
+      '/function': {
         target: 'https://asia-east1-mpwei-logistics-system.cloudfunctions.net',
-        pathRewrite: { '^/api': '' }
+        pathRewrite: { '^/function': '' }
       }
     }
   },

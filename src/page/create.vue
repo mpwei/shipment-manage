@@ -32,11 +32,10 @@ import { ref, onMounted, onBeforeUnmount } from 'vue'
 import 'video.js/dist/video-js.css'
 import 'videojs-record/dist/css/videojs.record.css'
 import videojs from 'video.js'
-
 import 'webrtc-adapter'
 import RecordRTC from 'recordrtc'
-
 import 'videojs-record/dist/videojs.record.js'
+import { InnerServerRequest } from '../plugins/request'
 
 export default {
   name: 'VideoRecord',
@@ -74,7 +73,7 @@ export default {
             ' with videojs-record ' + videojs.getPluginVersion('record') +
             ' and recordrtc ' + RecordRTC.version
         videojs.log(msg)
-        // player.value.record().getDevice()
+        player.value.record().getDevice()
       })
 
       // device is ready
@@ -91,7 +90,23 @@ export default {
       player.value.on('finishRecord', () => {
         // the blob object contains the recorded data that
         // can be downloaded by the user, stored on server etc.
-        console.log('finished recording: ', player.value.recordedData)
+        console.log('finished recording:')
+        console.log(player.value.recordedData)
+        // player.value.record().saveAs({'video': 'my-video-file-name.webm'})
+
+        const data = new FormData()
+        data.append('name', 'A0001-0001.mp4')
+        data.append('file', player.value.recordedData)
+
+        InnerServerRequest.post('/upload/local', data, {
+          header : {
+            'Content-Type' : 'multipart/form-data'
+          }
+        }).then(response => {
+          console.log('response', response)
+        }).catch(error => {
+          console.log('error', error)
+        })
       })
 
       // error handling

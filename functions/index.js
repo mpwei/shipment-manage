@@ -3,6 +3,14 @@ const admin = require('firebase-admin')
 
 if (!admin.apps.length) {
     admin.initializeApp()
+    // admin.initializeApp({
+    //     credential: admin.credential.cert({
+    //         projectId: process.env.VUE_APP_FIREBASE_PROJECTID,
+    //         private_key: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+    //         client_email: process.env.FIREBASE_CLIENT_EMAIL
+    //     }),
+    //     databaseURL: process.env.VUE_APP_FIREBASE_DATABASEURL
+    // })
 }
 
 exports.DoLogin = functions.region('asia-east1').https.onRequest(async (req, res) => {

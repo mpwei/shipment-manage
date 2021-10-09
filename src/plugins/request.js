@@ -1,10 +1,10 @@
 import axios from 'axios'
 
-export const ServerRequest = axios.create({
-    baseURL: process.env.NODE_ENV === 'production' ? 'https://asia-east1-mpwei-logistics-system.cloudfunctions.net' : 'http://localhost:8080/api'
+export const FunctionServerRequest = axios.create({
+    baseURL: process.env.NODE_ENV === 'production' ? 'https://asia-east1-mpwei-logistics-system.cloudfunctions.net' : 'http://localhost:8080/function'
 })
 
-ServerRequest.interceptors.response.use(
+FunctionServerRequest.interceptors.response.use(
     (response) => {
         return response
     },
@@ -32,3 +32,8 @@ ServerRequest.interceptors.response.use(
         return Promise.reject(Error)
     }
 )
+
+export const InnerServerRequest = axios.create({
+    baseURL: '/api',
+    timeout: 60000
+})

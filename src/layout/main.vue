@@ -59,6 +59,16 @@
           </q-item-section>
         </q-item>
 
+        <q-item clickable v-ripple to="/qrcode">
+          <q-item-section avatar >
+            <q-icon name="qr_code_2" />
+          </q-item-section>
+
+          <q-item-section>
+            二維碼清單
+          </q-item-section>
+        </q-item>
+
         <q-item clickable v-ripple to="/settings">
           <q-item-section avatar >
             <q-icon name="settings" />

@@ -27,7 +27,7 @@
 <script>
 import { ref } from 'vue'
 import { useQuasar } from 'quasar'
-import { ServerRequest } from '../plugins/request'
+import { FunctionServerRequest } from '../plugins/request'
 import { getAuth, signInWithEmailAndPassword } from 'firebase/auth'
 import ErrorCode from '../locales/error'
 import { useRouter } from 'vue-router'
@@ -41,12 +41,14 @@ export default {
     const Account = ref('')
     const Password = ref('')
     const DoLogin = () => {
-      return ServerRequest.post('/DoLogin', {
+      $q.loadingBar.start()
+      return FunctionServerRequest.post('/DoLogin', {
         Project: Project.value,
         Account: Account.value
       }).then(({ data }) => {
         const auth = getAuth()
         return signInWithEmailAndPassword(auth, data.UserData.Email, Password.value).then(() => {
+          $q.loadingBar.stop()
           $router.push('/dashboard')
           $q.notify({
             type: 'positive',
@@ -60,10 +62,9 @@ export default {
         })
       }).catch((error) => {
         console.log(error.message)
+        $q.loadingBar.stop()
         $q.notify({
-          type: 'warning',
-          color: 'red-9',
-          textColor: 'white',
+          type: 'negative',
           message: '錯誤',
           caption: error.Message || ErrorCode[error.code]
         })
