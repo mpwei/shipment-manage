@@ -16,7 +16,7 @@
       />
       <q-input stack-label v-model="Account" label="員工帳號" readonly />
       <q-input stack-label v-model="UserName" label="員工名稱" readonly />
-      <q-input stack-label v-model="ShipmentNo" label="揀貨單號" placeholder="輸入揀貨單號或掃描揀貨單上條碼" clearable @update:model-value="Execute" />
+      <q-input stack-label v-model="ShipmentNo" label="揀貨單號" placeholder="輸入揀貨單號或掃描揀貨單上條碼" clearable @update:model-value="CheckMode" />
       <q-card v-if="Object.keys(Data).length > 0" class="q-mt-lg">
         <q-card-section>
           <h4 class="text-h2 text-weight-bold text-red-10 text-center q-my-none">{{ Data.Location || Data.Message }}</h4>
@@ -70,6 +70,16 @@ export default {
       SwitchMode()
     })
 
+    const PlayVoiceMessage = (msg) => {
+      const VoiceMessage = new SpeechSynthesisUtterance()
+      VoiceMessage.text = msg
+      VoiceMessage.lang = 'zh'
+      VoiceMessage.volume = 50
+      VoiceMessage.rate = 0.7
+      VoiceMessage.pitch = 1.5
+      speechSynthesis.speak(VoiceMessage)
+    }
+
     const Execute = (value) => {
       Data.value = {}
       if (value === '') {
@@ -90,6 +100,7 @@ export default {
           }).then(({ data }) => {
             $q.loadingBar.stop()
             Data.value = data.Data
+            PlayVoiceMessage(Data.value.Location)
             return InnerServerRequest.post('/shipment/update', {
               ShipmentNo: ShipmentNo.value,
               UpdateData: {
@@ -130,7 +141,12 @@ export default {
       UserName,
       ShipmentNo,
       Data,
-      Execute
+      Execute,
+      CheckMode () {
+        if (Mode.value !== 'Scan') {
+          Execute(ShipmentNo.value)
+        }
+      }
     }
   }
 }
