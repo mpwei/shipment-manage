@@ -4,10 +4,10 @@ const createError = require('http-errors')
 require('dotenv').config()
 
 // Create express instance
-const app = express()
-app.use(express.json())
-app.use(bodyParser.json())
-app.use(bodyParser.urlencoded({extended: true}))
+const index = express()
+index.use(express.json())
+index.use(bodyParser.json())
+index.use(bodyParser.urlencoded({extended: true}))
 
 const admin = require('firebase-admin')
 if (!admin.apps.length) {
@@ -26,15 +26,15 @@ const IndexRoute = require('./routes/index')
 const ShipmentRoute = require('./routes/shipment')
 
 // Import API Routes
-app.use('/', IndexRoute)
-app.use('/shipment', ShipmentRoute)
+index.use('/', IndexRoute)
+index.use('/shipment', ShipmentRoute)
 
 // catch 404 and forward to error handler
-app.use(function(req, res, next) {
+index.use(function(req, res, next) {
     next(createError(404))
 })
 
-app.use((err, req, res, next) => {
+index.use((err, req, res, next) => {
   console.log(err)
   // console.log(err)
   // return error status and message to the requester
@@ -45,4 +45,4 @@ app.use((err, req, res, next) => {
 })
 
 // Export express app
-module.exports = app
+module.exports = index
