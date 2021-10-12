@@ -1,7 +1,8 @@
 import axios from 'axios'
 
 export const FunctionServerRequest = axios.create({
-    baseURL: process.env.NODE_ENV === 'production' ? 'https://asia-east1-mpwei-logistics-system.cloudfunctions.net' : 'http://localhost:8080/function'
+    // baseURL: process.env.NODE_ENV === 'production' ? 'https://asia-east1-mpwei-logistics-system.cloudfunctions.net' : 'http://localhost:8080/function'
+    baseURL: '/function'
 })
 
 FunctionServerRequest.interceptors.response.use(
