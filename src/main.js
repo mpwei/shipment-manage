@@ -6,7 +6,7 @@ import Router from './router'
 import { auth } from './plugins/firebase'
 import Store from './store'
 
-createApp(App).use(Router).use(Quasar, quasarUserOptions).mount('#app')
+createApp(App).use(Router).use(Store).use(Quasar, quasarUserOptions).mount('#app')
 
 auth.onAuthStateChanged((user) => {
     LoadingBar.start()

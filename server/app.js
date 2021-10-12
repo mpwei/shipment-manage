@@ -9,11 +9,25 @@ app.use(express.json())
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({extended: true}))
 
-// Require API routes
-const route = require('./routes/index')
-// Import API Routes
-app.use('/', route)
+const admin = require('firebase-admin')
+if (!admin.apps.length) {
+  admin.initializeApp({
+      credential: admin.credential.cert({
+          projectId: process.env.VUE_APP_FIREBASE_PROJECTID,
+          private_key: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+          client_email: process.env.FIREBASE_CLIENT_EMAIL
+      }),
+      databaseURL: process.env.VUE_APP_FIREBASE_DATABASEURL
+  })
+}
 
+// Require API routes
+const IndexRoute = require('./routes/index')
+const ShipmentRoute = require('./routes/shipment')
+
+// Import API Routes
+app.use('/', IndexRoute)
+app.use('/shipment', ShipmentRoute)
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

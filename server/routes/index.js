@@ -23,7 +23,7 @@ const FileMulter = Multer({
 })
 
 router.post('/', (req, res) => {
-    return res.send('OK')
+    return res.send('OK22')
 })
 
 router.post('/upload/local', FileMulter.single('file'), (req, res) => {

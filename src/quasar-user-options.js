@@ -1,4 +1,4 @@
-import { Notify, LoadingBar } from 'quasar'
+import { Notify, LoadingBar, Dialog } from 'quasar'
 import './styles/quasar.scss'
 import iconSet from 'quasar/icon-set/fontawesome-v5.js'
 import lang from 'quasar/lang/zh-TW.js'
@@ -16,7 +16,8 @@ export default {
   },
   plugins: {
     Notify,
-    LoadingBar
+    LoadingBar,
+    Dialog
   },
   lang: lang,
   iconSet: iconSet

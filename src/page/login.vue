@@ -3,7 +3,7 @@
     <q-page-container>
       <q-page class="flex flex-center bg-blue-10">
         <div class="column">
-          <h5 class="text-h4 text-white q-my-md text-center"><b>WebRTC</b> Camera</h5>
+          <h5 class="text-h4 text-white q-my-md text-center"><b>Shipment</b> Management</h5>
           <div class="row">
             <q-card square bordered flat class="q-pa-lg shadow-1">
               <q-card-section>
@@ -49,6 +49,13 @@ export default {
         const auth = getAuth()
         return signInWithEmailAndPassword(auth, data.UserData.Email, Password.value).then(() => {
           $q.loadingBar.stop()
+          localStorage.setItem('User', JSON.stringify({
+            Project: Project.value,
+            Account: Account.value,
+            Email: data.UserData.Email,
+            Name: data.UserData.Name,
+            Permission: data.UserData.Permission
+          }))
           $router.push('/dashboard')
           $q.notify({
             type: 'positive',

@@ -50,7 +50,8 @@ exports.DoLogin = functions.region('asia-east1').https.onRequest(async (req, res
         Message: '成功取得會員資訊',
         UserData: {
             Email: UserData.Email,
-            Name: UserData.Name
+            Name: UserData.Name,
+            Permission: UserData.Permission
         }
     })
 })

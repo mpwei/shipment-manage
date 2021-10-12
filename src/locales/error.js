@@ -55,5 +55,10 @@ export default {
     'auth/session-cookie-expired': '提供的 Firebase 會話 Cookie 已過期。',
     'auth/session-cookie-revoked': 'Firebase 會話 Cookie 已被撤消。',
     'auth/uid-already-exists': '提供的 uid 已被現有用戶使用。每個用戶的 uid 都必須是唯一的。',
-    'auth/unauthorized-continue-uri': '接續網址的網域未列入白名單。請在 Firebase 控制台中將該網域列入白名單。'
+    'auth/unauthorized-continue-uri': '接續網址的網域未列入白名單。請在 Firebase 控制台中將該網域列入白名單。',
+    'SH-001': '查無資料',
+    'SH-002': '系統錯誤',
+    'SH-003': '系統錯誤',
+    'SH-004': '未輸入貨件編號',
+    'SH-005': '系統錯誤',
 }

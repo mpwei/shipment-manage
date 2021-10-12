@@ -17,6 +17,9 @@ export default createStore({
   mutations: {
     SetAuth(state, value) {
       state.User = Object.assign(state.User, value)
+    },
+    SetUserData(state, value) {
+      state.UserData = Object.assign(state.UserData, value)
     }
   },
   actions: {
@@ -29,6 +32,7 @@ export default createStore({
           })
         } else {
           commit('SetAuth', user)
+          commit('SetUserData', JSON.parse(localStorage.getItem('User')))
           resolve({
             message: 'Login/Success'
           })

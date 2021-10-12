@@ -7,11 +7,25 @@ const Routes = [
         redirect: '/dashboard',
         children: [
             { path: '/dashboard', component: () => import('../page/index') },
-            { path: '/device', component: () => import('../page/device') },
-            { path: '/record', component: () => import('../page/record') },
-            { path: '/settings', component: () => import('../page/settings') },
-            { path: '/qrcode', component: () => import('../page/qrcode') },
-            { path: '/create', component: () => import('../page/create') }
+            {
+                path: '/record',
+                component: () => import('../page/record/index'),
+                children: [
+                    { path: '/record/list', component: () => import('../page/record/list') },
+                    { path: '/record/device', component: () => import('../page/record/device') },
+                    { path: '/record/settings', component: () => import('../page/record/settings') },
+                    { path: '/record/qrcode', component: () => import('../page/record/qrcode') },
+                    { path: '/record/create', component: () => import('../page/record/create') }
+                ]
+            },
+            {
+                path: '/shipment',
+                component: () => import('../page/shipment/index'),
+                children: [
+                    { path: '/shipment/list', component: () => import('../page/shipment/list') },
+                    { path: '/shipment/get', component: () => import('../page/shipment/get') }
+                ]
+            }
         ]
     },
     { path: '/login', component: () => import('../page/login') }

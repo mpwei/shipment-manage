@@ -1,0 +1,69 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        docker pull asia.gcr.io/mpwei-2889f/shipment-management:latest || exit 0
+  # build the container
+  - name: 'gcr.io/cloud-builders/docker'
+    timeout: 1200s
+    args:
+      [
+        'build',
+        '-f',
+        'Dockerfile',
+        '-t',
+        'asia.gcr.io/mpwei-2889f/shipment-management',
+        '--cache-from',
+        'asia.gcr.io/mpwei-2889f/shipment-management:latest',
+        '.',
+      ]
+    env:
+      - 'CLOUDSDK_COMPUTE_ZONE=asia-east1'
+      - 'CLOUDSDK_CONTAINER_CLUSTER=mpwei-2889f-cluster'
+  # Push container
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'push',
+      'asia.gcr.io/mpwei-2889f/shipment-management:latest'
+    ]
+    id: Push
+  # Deploy container image to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    args: [
+      'run',
+      'deploy',
+      'mpwei-shipment-management',
+      '--project',
+      'mpwei-2889f',
+      '--image',
+      'asia.gcr.io/mpwei-2889f/shipment-management:latest',
+      '--port', '3000',
+      '--region', 'asia-east1',
+      '--platform', 'managed',
+      '--allow-unauthenticated',
+      '--quiet'
+    ]
+    id: DeployPublic
+    entrypoint: gcloud
+  # Deploy container image to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    args: [
+        'run',
+        'deploy',
+        'mpwei-service-api',
+        '--project',
+        'mpwei-2889f',
+        '--image',
+        'asia.gcr.io/mpwei-2889f/shipment-management:latest',
+        '--port', '3000',
+        '--region', 'asia-east1',
+        '--platform', 'managed',
+        '--quiet'
+    ]
+    id: DeployPrivate
+    entrypoint: gcloud
+timeout: 1200s
+images:
+  - asia.gcr.io/mpwei-2889f/shipment-management

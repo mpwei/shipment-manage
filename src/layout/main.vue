@@ -1,23 +1,28 @@
 <template>
   <q-layout view="hHh LpR fFf">
 
-    <q-header reveal elevated class="bg-blue-10 text-white">
+    <q-header elevated class="bg-blue-10 text-white">
       <q-toolbar>
         <q-btn dense flat round icon="menu" @click="toggleLeftDrawer" />
 
         <q-toolbar-title>
-          <b>WebRTC</b> Camera
+          <b>Shipment</b> Management
         </q-toolbar-title>
+
+        <q-space />
+
+        <q-btn v-if="NavPermission.includes('record')" dense flat round icon="qr_code" @click="toggleRightDrawer" />
       </q-toolbar>
+
     </q-header>
 
     <q-drawer
         show-if-above
         v-model="leftDrawerOpen"
         side="left"
-        behavior="desktop"
+        behavior="default"
         bordered
-        :width="260"
+        :width="240"
         :breakpoint="400"
         class="flex column justify-between"
     >
@@ -30,52 +35,20 @@
             總覽
           </q-item-section>
         </q-item>
-        <q-item clickable v-ripple to="/record">
+        <q-item v-if="NavPermission.includes('shipment')" clickable v-ripple to="/shipment">
           <q-item-section avatar>
-            <q-icon name="video_library" />
+            <q-icon name="local_shipping" />
           </q-item-section>
           <q-item-section>
-            錄影紀錄
+            貨件管理
           </q-item-section>
         </q-item>
-
-        <q-item clickable v-ripple to="/create">
+        <q-item v-if="NavPermission.includes('record')" clickable v-ripple to="/record">
           <q-item-section avatar>
-            <q-icon name="video_call" />
-          </q-item-section>
-
-          <q-item-section>
-            建立紀錄
-          </q-item-section>
-        </q-item>
-
-        <q-item clickable v-ripple to="/device">
-          <q-item-section avatar >
             <q-icon name="videocam" />
           </q-item-section>
-
           <q-item-section>
-            裝置管理
-          </q-item-section>
-        </q-item>
-
-        <q-item clickable v-ripple to="/qrcode">
-          <q-item-section avatar >
-            <q-icon name="qr_code_2" />
-          </q-item-section>
-
-          <q-item-section>
-            二維碼清單
-          </q-item-section>
-        </q-item>
-
-        <q-item clickable v-ripple to="/settings">
-          <q-item-section avatar >
-            <q-icon name="settings" />
-          </q-item-section>
-
-          <q-item-section>
-            設定
+            揀貨錄影
           </q-item-section>
         </q-item>
       </q-list>
@@ -92,6 +65,48 @@
       </q-list>
     </q-drawer>
 
+    <q-drawer
+        :overlay="true"
+        show-if-above
+        :persistent="false"
+        v-model="rightDrawerOpen"
+        side="right"
+        bordered
+        :width="200"
+        :breakpoint="1200"
+    >
+      <div class="q-pa-md">
+        <q-field label="開啟鏡頭" stack-label>
+          <template v-slot:control>
+            <div class="self-center full-width no-outline q-mt-md" tabindex="0">
+              <img src="../assets/open.svg" class="full-width">
+            </div>
+          </template>
+        </q-field>
+        <q-field label="開始錄影" stack-label>
+          <template v-slot:control>
+            <div class="self-center full-width no-outline q-mt-md" tabindex="0">
+              <img src="../assets/start.svg" class="full-width">
+            </div>
+          </template>
+        </q-field>
+        <q-field label="停止錄影" stack-label>
+          <template v-slot:control>
+            <div class="self-center full-width no-outline q-mt-md" tabindex="0">
+              <img src="../assets/end.svg" class="full-width">
+            </div>
+          </template>
+        </q-field>
+        <q-field label="關閉鏡頭" stack-label>
+          <template v-slot:control>
+            <div class="self-center full-width no-outline q-mt-md" tabindex="0">
+              <img src="../assets/close.svg" class="full-width">
+            </div>
+          </template>
+        </q-field>
+      </div>
+    </q-drawer>
+
     <q-page-container>
       <router-view />
     </q-page-container>
@@ -100,7 +115,7 @@
 </template>
 
 <script>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { getAuth, signOut } from 'firebase/auth'
@@ -109,10 +124,14 @@ export default {
   setup () {
     const $q = useQuasar()
     const $router = useRouter()
+    const Permission = JSON.parse(localStorage.getItem('User')).Permission || {}
+    const NavPermission = Permission.Navigation || []
     const leftDrawerOpen = ref(false)
+    const rightDrawerOpen = ref(false)
     const Logout = () => {
       const auth = getAuth()
       return signOut(auth).then(() => {
+        localStorage.removeItem('User')
         $router.replace('/login')
         $q.notify({
           type: 'positive',
@@ -124,11 +143,20 @@ export default {
       })
     }
 
+    onMounted(() => {
+      rightDrawerOpen.value = false
+    })
+
     return {
       Logout,
       leftDrawerOpen,
+      rightDrawerOpen,
+      NavPermission,
       toggleLeftDrawer () {
         leftDrawerOpen.value = !leftDrawerOpen.value
+      },
+      toggleRightDrawer () {
+        rightDrawerOpen.value = !rightDrawerOpen.value
       }
     }
   }
