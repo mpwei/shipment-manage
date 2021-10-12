@@ -3,12 +3,10 @@
     {
       "source": "/function/:match*",
       "destination": "https://asia-east1-mpwei-logistics-system.cloudfunctions.net/:match*"
-    }
-  ],
-  "builds": [
+    },
     {
-      "src": "api/index.js",
-      "use": "@vercel/node"
+      "source": "/api/(.*)",
+      "destination": "/api"
     }
   ],
   "headers": [

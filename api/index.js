@@ -26,8 +26,8 @@ const IndexRoute = require('./routes/index')
 const ShipmentRoute = require('./routes/shipment')
 
 // Import API Routes
-index.use('/', IndexRoute)
-index.use('/shipment', ShipmentRoute)
+index.use(process.env.SERVER_PREFIX + '/', IndexRoute)
+index.use(process.env.SERVER_PREFIX + '/shipment', ShipmentRoute)
 
 // catch 404 and forward to error handler
 index.use(function(req, res, next) {
