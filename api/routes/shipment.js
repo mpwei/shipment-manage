@@ -27,9 +27,15 @@ router.get('/get', AuthMiddleware, (req, res, next) => {
     })
 })
 
-router.post('/list', AuthMiddleware, (req, res, next) => {
-    let LastCreateTime = ''
+router.post('/list', AuthMiddleware, async (req, res, next) => {
+    let NextCreateTime = ''
     let Client = admin.firestore().collection('Clients').doc(req.body.project).collection('Shipment')
+    const Counts = await admin.firestore().collection('Clients').doc(req.body.project).get().then((doc) => {
+       if (!doc.exists) {
+           return 0
+       }
+       return doc.data().ShipmentCount
+    })
     if (typeof req.body.ShipmentNo !== 'undefined') {
         Client = Client.where('ShipmentNo', '==', req.body.ShipmentNo)
     }
@@ -39,10 +45,20 @@ router.post('/list', AuthMiddleware, (req, res, next) => {
     if (typeof req.body.Operator !== 'undefined') {
         Client = Client.where('Operator', '==', req.body.Operator)
     }
-    if (typeof req.body.LastCreateTime !== 'undefined') {
-        LastCreateTime = admin.firestore.Timestamp.fromMillis(req.body.LastCreateTime._seconds * 1000)
+    Client = Client.orderBy('CreateTime', 'desc')
+    console.log(req.body.NextCreateTime)
+    if (typeof req.body.NextCreateTime !== 'undefined') {
+        NextCreateTime = admin.firestore.Timestamp.fromMillis(req.body.NextCreateTime._seconds * 1000)
+        switch (req.body.Action) {
+            case 'Prev':
+                Client = Client.endBefore(NextCreateTime)
+                break
+            case 'Next':
+                Client = Client.startAfter(NextCreateTime)
+                break
+        }
     }
-    return Client.orderBy('CreateTime', 'desc').startAfter(LastCreateTime).limit(req.body.PerPage || 10).get().then((qs) => {
+    return Client.limit(req.body.PerPage || 10).get().then((qs) => {
         const ResponseData = []
         qs.forEach((doc) => {
             ResponseData.push(doc.data())
@@ -51,7 +67,8 @@ router.post('/list', AuthMiddleware, (req, res, next) => {
             Code: '200',
             Message: 'Success',
             Data: ResponseData,
-            LastCreateTime: ResponseData.length > 1 ? ResponseData[(ResponseData.length-1)].CreateTime : 'Last'
+            Counts,
+            NextCreateTime: ResponseData.length > 0 ? ResponseData[(ResponseData.length - 1)].CreateTime : null
         })
     }).catch((error) => {
         return next({
@@ -99,7 +116,7 @@ const FileMulter = Multer({
     fileFilter: function (req, file, cb) {
         // ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-excel']
         if (!['text/csv', 'text/plain'].includes(file.mimetype)) {
-            return cb(new Error('Only support CSV and TXT.'))
+            return cb(new Error('僅支援CSV或TXT檔'))
         }
 
         return cb(null, true)
@@ -120,7 +137,9 @@ router.post('/import', FileMulter.single('upload'), AuthMiddleware, (req, res, n
             const TempObject = {}
             const CurrentLine = Line[i].split(',')
             for (let j = 0; j < Headers.length; j++) {
-                TempObject[Schema[Headers[j].replace(/"/g, '').replace(/\r/g, '')]] = CurrentLine[j].replace(/"/g, '').replace(/\r/g, '')
+                if (typeof CurrentLine[j] !== 'undefined') {
+                    TempObject[Schema[Headers[j].replace(/"/g, '').replace(/\r/g, '')]] = CurrentLine[j].replace(/"/g, '').replace(/\r/g, '')
+                }
             }
             Result.push(TempObject)
         }
@@ -129,15 +148,21 @@ router.post('/import', FileMulter.single('upload'), AuthMiddleware, (req, res, n
         Result = xlsx.utils.sheet_to_json(XLSXData.Sheets[XLSXData.SheetNames[0]])
     }
     let Client = admin.firestore().collection('Clients').doc(req.body.project).collection('Shipment')
-    const ImportData = Result || []
+    const ImportData = Result.filter(item => item.ShipmentNo !== '') || []
     const Batch = admin.firestore().batch()
-    ImportData.forEach((item) => {
-        console.log(item)
+    ImportData.forEach((item, index) => {
         const Reference = Client.doc(item.ShipmentNo)
         return Batch.set(Reference, {
             ...item,
-            CreateTime: admin.firestore.Timestamp.fromMillis(dayjs(item.CreateTime).unix() * 1000)
+            CreateTime: admin.firestore.Timestamp.fromMillis((dayjs().unix() + index) * 1000)
+        }, {
+            merge: true
         })
+    })
+    Batch.set(admin.firestore().collection('Clients').doc(req.body.project), {
+        ShipmentCount: admin.firestore.FieldValue.increment(ImportData.length)
+    }, {
+        merge: true
     })
 
     return Batch.commit().then(() => {
@@ -155,18 +180,42 @@ router.post('/import', FileMulter.single('upload'), AuthMiddleware, (req, res, n
 
 router.post('/export', AuthMiddleware, (req, res, next) => {
     let Client = admin.firestore().collection('Clients').doc(req.body.project).collection('Shipment')
-    const StartTime = ''
-    const EndTime = ''
-    return Client.startAt(StartTime).endAt(EndTime).get().then((qs) => {
-        const ResponseData = []
+    console.log(req.body.StartTime)
+    console.log(req.body.EndTime)
+    const StartTime = admin.firestore.Timestamp.fromMillis(dayjs(req.body.StartTime).unix() * 1000)
+    const EndTime = admin.firestore.Timestamp.fromMillis(dayjs(req.body.EndTime).unix() * 1000)
+    return Client.orderBy('UpdateTime').startAt(StartTime).endAt(EndTime).get().then((qs) => {
+        const Result = []
+        const Headers = ['ShipmentNo', 'Location', 'CreateTime', 'Operator', 'UpdateTime']
+        const Sheet = [
+            {
+                ShipmentNo: '貨件號碼',
+                Location: '到貨站',
+                CreateTime: '匯入時間',
+                Operator: '作業人員',
+                UpdateTime: '最後作業時間',
+            }
+        ]
         qs.forEach((doc) => {
-            ResponseData.push(doc.data())
+            Result.push(doc.data())
+            Sheet.push({
+                ShipmentNo: doc.data().ShipmentNo,
+                Location: doc.data().Location,
+                CreateTime: dayjs(doc.data().CreateTime._seconds * 1000).format('YYYY-MM-DD HH:mm:ss'),
+                Operator: doc.data().Operator,
+                UpdateTime: dayjs(doc.data().UpdateTime._seconds * 1000).format('YYYY-MM-DD HH:mm:ss')
+            })
         })
+
+        const WorkBook = xlsx.utils.book_new()
+        const WorkSheet = xlsx.utils.json_to_sheet(Sheet, {header: Headers, skipHeader: true})
+        xlsx.utils.book_append_sheet(WorkBook, WorkSheet)
+
         return res.send({
             Code: '200',
             Message: 'Success',
-            Data: ResponseData,
-            LastCreateTime: ResponseData.length > 1 ? ResponseData[(ResponseData.length-1)].CreateTime : 'Last'
+            Data: Result,
+            CsvData: xlsx.write(WorkBook, {type: 'base64', bookType: 'csv'})
         })
     }).catch((error) => {
         return next({

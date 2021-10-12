@@ -3,7 +3,7 @@
     <div class="container-sm">
       <q-btn-group spread class="desktop-hide q-mb-md text-center full-width">
         <q-btn color="primary" label="匯入" @click="OpenUploadModal()" />
-        <q-btn color="negative" label="匯出" @click="Export" />
+        <q-btn color="negative" label="匯出" @click="OpenExportModal()" />
         <q-btn
             color="secondary"
             label="下載範例"
@@ -12,11 +12,13 @@
         />
       </q-btn-group>
       <q-table
+          :loading="Loading"
           :rows="Data"
           :columns="Columns"
-          row-key="name"
-          :pagination="{rowsPerPage: 10, rowsNumber: 10}"
+          row-key="ShipmentNo"
+          v-model:pagination="Pagination"
           :rows-per-page-options="[10, 20]"
+          @request="GetList"
       >
         <template v-slot:top-right>
           <div class="mobile-hide">
@@ -30,17 +32,17 @@
             />
             <q-btn
                 color="negative"
-                icon-right="archive"
+                icon="archive"
                 label="匯出"
                 no-caps
                 class="q-mr-sm"
-                @click="Export"
+                @click="OpenExportModal()"
             />
             <q-btn
                 type="a"
                 href="https://firebasestorage.googleapis.com/v0/b/mpwei-logistics-system.appspot.com/o/example%2F%E8%B2%A8%E4%BB%B6%E5%88%97%E8%A1%A8-%E5%8C%AF%E5%85%A5%E7%AF%84%E4%BE%8B.csv?alt=media&token=1a978397-1bac-4e70-95fc-5bae5e454bdf"
                 color="secondary"
-                label="下載範例"
+                label="下載匯入範例"
                 icon="download"
                 no-caps
             />
@@ -49,7 +51,30 @@
       </q-table>
     </div>
     <q-dialog ref="dialogRef" @hide="onDialogHide">
-      <q-uploader url="/api/shipment/import" field-name="upload" :headers="UploadHeader" />
+      <q-uploader url="/api/shipment/import" field-name="upload" :headers="UploadHeader" @uploaded="HandleUploadMessage" @failed="HandleUploadMessage" />
+    </q-dialog>
+    <q-dialog ref="ExportDialog" @hide="onDialogHide">
+      <q-card style="width: 400px; max-width: 80vw;">
+        <q-card-section>
+          <div class="text-h6">匯出貨件列表</div>
+        </q-card-section>
+
+        <q-card-section class="q-pt-none">
+          <q-input filled v-model="ExportDate" mask="date" label="選擇日期" :rules="['date']">
+            <template v-slot:append>
+              <q-icon name="event" class="cursor-pointer">
+                <q-popup-proxy ref="qDateProxy" transition-show="scale" transition-hide="scale">
+                  <q-date v-model="ExportDate" minimal />
+                </q-popup-proxy>
+              </q-icon>
+            </template>
+          </q-input>
+        </q-card-section>
+
+        <q-card-actions>
+          <q-btn color="primary" class="full-width" label="執行匯出" @click="Export()" />
+        </q-card-actions>
+      </q-card>
     </q-dialog>
   </main>
 </template>
@@ -57,30 +82,10 @@
 <script>
 import { ref, onMounted } from 'vue'
 import { getAuth, getIdToken } from 'firebase/auth'
-import { useQuasar, exportFile, useDialogPluginComponent } from 'quasar'
+import { useQuasar, useDialogPluginComponent } from 'quasar'
 import dayjs from 'dayjs'
 import { InnerServerRequest } from '@/plugins/request'
 import ErrorCode from "../../locales/error"
-
-function wrapCsvValue (val, formatFn) {
-  let formatted = formatFn !== void 0
-      ? formatFn(val)
-      : val
-
-  formatted = formatted === void 0 || formatted === null
-      ? ''
-      : String(formatted)
-
-  formatted = formatted.split('"').join('""')
-  /**
-   * Excel accepts \n and \r in strings, but some other CSV parsers do not
-   * Uncomment the next two lines to escape new lines
-   */
-  // .split('\n').join('\\n')
-  // .split('\r').join('\\r')
-
-  return `"${formatted}"`
-}
 
 export default {
   name: 'ShipmentList',
@@ -99,48 +104,96 @@ export default {
       }
     }
     const Columns = [
-      { name: 'CreateTime', align: 'left', label: '匯入時間', field: 'CreateTime', format: val => Filter(val, 'CreateTime') },
       { name: 'ShipmentNo', align: 'left', label: '貨件號碼', field: 'ShipmentNo', format: val => Filter(val, 'ShipmentNo') },
       { name: 'Location', align: 'left', label: '到貨站', field: 'Location', format: val => Filter(val, 'Location') },
+      { name: 'CreateTime', align: 'left', label: '匯入時間', field: 'CreateTime', format: val => Filter(val, 'CreateTime') },
       { name: 'Operator', align: 'left', label: '作業人員', field: 'Operator', format: val => Filter(val, 'Operator') },
       { name: 'UpdateTime', align: 'left', label: '最後作業時間', field: 'UpdateTime', format: val => Filter(val, 'CreateTime') },
     ]
+
     const Data = ref([])
+    const Loading = ref(false)
+    const Pagination = ref({
+      sortBy: 'desc',
+      descending: false,
+      page: 1,
+      rowsPerPage: 10,
+      rowsNumber: 0
+    })
+    const NextCreateTime = ref(null)
+    const GetList = async (props) => {
+      console.log(props)
+      Loading.value = true
+      const Auth = getAuth()
+      const Token = await getIdToken(Auth.currentUser)
+      const Condition = {
+        PerPage: Pagination.value.rowsPerPage
+      }
+      if (props && props.pagination.page < Pagination.value.page) {
+        Condition.Action = 'Prev'
+        Condition.NextCreateTime = NextCreateTime.value
+      }
+      if (props && props.pagination.page > Pagination.value.page) {
+        Condition.Action = 'Next'
+        Condition.NextCreateTime = NextCreateTime.value
+      }
+      return InnerServerRequest.post('/shipment/list', Condition, {
+        headers: {
+          'xx-csrf-token': Token
+        }
+      }).then(({ data }) => {
+        $q.loadingBar.stop()
+        Loading.value = false
+        Data.value = data.Data
+        NextCreateTime.value = data.NextCreateTime
+        Pagination.value.rowsNumber = data.Counts
+        if (props) {
+          Pagination.value.page = props.pagination.page
+        }
+      }).catch((error) => {
+        $q.loadingBar.stop()
+        Loading.value = false
+        throw error
+      })
+    }
+
+    const ExportDialog = ref(null)
+    const ExportDate = ref(dayjs().format('YYYY/MM/DD'))
 
     $q.loadingBar.start()
     onMounted(() => {
       setTimeout(async () => {
         $q.loadingBar.increment(33)
-        const Auth = getAuth()
-        const Token = await getIdToken(Auth.currentUser)
-        return InnerServerRequest.post('/shipment/list', {}, {
-          headers: {
-            'xx-csrf-token': Token
-          }
-        }).then(({ data }) => {
-          $q.loadingBar.stop()
-          Data.value = data.Data
-        }).catch((error) => {
-          $q.loadingBar.stop()
+        return GetList().catch((error) => {
           $q.notify({
             type: 'negative',
             message: '錯誤',
             caption: error.Message || ErrorCode[error.code]
           })
         })
-      }, 2000)
+      }, 1500)
     })
 
     let IdToken = ''
     const { dialogRef, onDialogHide } = useDialogPluginComponent()
 
     return {
+      Loading,
       Columns,
       Data,
+      Pagination,
+      dialogRef,
+      ExportDialog,
+      ExportDate,
+      onDialogHide,
+      GetList,
       async OpenUploadModal () {
         const Auth = getAuth()
         IdToken = await getIdToken(Auth.currentUser)
         dialogRef.value.show()
+      },
+      async OpenExportModal () {
+        ExportDialog.value.show()
       },
       UploadHeader () {
         return [
@@ -150,33 +203,68 @@ export default {
           }
         ]
       },
-      Export () {
-        // naive encoding to csv format
-        const content = [Columns.map(col => wrapCsvValue(col.label))].concat(
-            Data.value.map(row => Columns.map(col => wrapCsvValue(
-                typeof col.field === 'function'
-                    ? col.field(row)
-                    : row[ col.field === void 0 ? col.name : col.field ],
-                col.format
-            )).join(','))
-        ).join('\r\n')
+      async Export () {
+        const Auth = getAuth()
+        const Token = await getIdToken(Auth.currentUser)
+        return InnerServerRequest.post('/shipment/export', {
+          StartTime: dayjs(ExportDate.value).format('YYYY-MM-DD HH:mm:ss'),
+          EndTime: dayjs(ExportDate.value).format('YYYY-MM-DD 23:59:59'),
+        }, {
+          headers: {
+            'xx-csrf-token': Token
+          }
+        }).then(({ data }) => {
+          const BinaryString = window.atob(data.CsvData)
+          const Bytes = new Uint8Array(BinaryString.length)
+          for (let index = 0; index < BinaryString.length; index++) {
+            Bytes[index] = BinaryString.charCodeAt(index)
+          }
+          const Data = new Blob([Bytes], {type: 'application/octet-stream'})
+          const blobURL = URL.createObjectURL(Data)
+          const tempLink = document.createElement('a')
+          tempLink.style.display = 'none'
+          tempLink.href = blobURL
+          tempLink.setAttribute('download', `貨件列表-${dayjs().format('YYYYMMDDHHmm')}.csv`, '_blank')
+          document.body.appendChild(tempLink)
+          tempLink.click()
+          document.body.removeChild(tempLink)
+          window.URL.revokeObjectURL(blobURL)
 
-        const status = exportFile(
-            `貨件列表-${dayjs().format('YYYYMMDDHHmmss')}.csv`,
-            content,
-            'text/csv'
-        )
-
-        if (status !== true) {
           $q.notify({
-            message: '當前瀏覽器不支援下載檔案',
-            color: 'negative',
-            icon: 'warning'
+            message: '成功',
+            caption: '匯出成功',
+            type: 'positive'
           })
-        }
+
+          ExportDialog.value.hide()
+        }).catch((error) => {
+          $q.notify({
+            message: '失敗',
+            caption: error.Message,
+            type: 'negative'
+          })
+        })
       },
-      dialogRef,
-      onDialogHide
+      HandleUploadMessage (info) {
+        const Response = JSON.parse(info.xhr.response)
+        switch (info.xhr.status) {
+          case 200:
+            $q.notify({
+              message: '成功',
+              caption: '匯入檔案成功',
+              type: 'positive'
+            })
+            GetList()
+            break
+          default:
+            $q.notify({
+              message: '失敗',
+              caption: Response.Message,
+              type: 'negative'
+            })
+            break
+        }
+      }
     }
   }
 }
