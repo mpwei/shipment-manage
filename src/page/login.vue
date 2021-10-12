@@ -2,7 +2,7 @@
   <q-layout>
     <q-page-container>
       <q-page class="flex flex-center bg-blue-10">
-        <div class="column">
+        <div class="column q-pa-md">
           <h5 class="text-h4 text-white q-my-md text-center"><b>Shipment</b> Management</h5>
           <div class="row">
             <q-card square bordered flat class="q-pa-lg shadow-1">
@@ -89,6 +89,7 @@ export default {
 
 <style>
 .q-card {
-  width: 420px;
+  width: 100%;
+  max-width: 420px;
 }
 </style>

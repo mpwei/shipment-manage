@@ -24,7 +24,7 @@ module.exports = {
     appleMobileWebAppStatusBarStyle: '#C10015'
   },
   devServer: {
-    before: require('./server/entrance'),
+    before: require('./api/entrance'),
     proxy: {
       '/function': {
         target: 'https://asia-east1-mpwei-logistics-system.cloudfunctions.net',

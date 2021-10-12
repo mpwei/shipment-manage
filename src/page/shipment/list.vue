@@ -1,6 +1,16 @@
 <template>
   <main class="q-py-lg">
     <div class="container-sm">
+      <q-btn-group spread class="desktop-hide q-mb-md text-center full-width">
+        <q-btn color="primary" label="匯入" @click="OpenUploadModal()" />
+        <q-btn color="negative" label="匯出" @click="Export" />
+        <q-btn
+            color="secondary"
+            label="下載範例"
+            type="a"
+            href="https://firebasestorage.googleapis.com/v0/b/mpwei-logistics-system.appspot.com/o/example%2F%E8%B2%A8%E4%BB%B6%E5%88%97%E8%A1%A8-%E5%8C%AF%E5%85%A5%E7%AF%84%E4%BE%8B.csv?alt=media&token=1a978397-1bac-4e70-95fc-5bae5e454bdf"
+        />
+      </q-btn-group>
       <q-table
           :rows="Data"
           :columns="Columns"
@@ -9,30 +19,32 @@
           :rows-per-page-options="[10, 20]"
       >
         <template v-slot:top-right>
-          <q-btn
-              color="primary"
-              label="匯入"
-              icon="publish"
-              no-caps
-              class="q-mr-sm"
-              @click="OpenUploadModal()"
-          />
-          <q-btn
-              color="negative"
-              icon-right="archive"
-              label="匯出"
-              no-caps
-              class="q-mr-sm"
-              @click="Export"
-          />
-          <q-btn
-              type="a"
-              href="https://firebasestorage.googleapis.com/v0/b/mpwei-logistics-system.appspot.com/o/example%2F%E8%B2%A8%E4%BB%B6%E5%88%97%E8%A1%A8-%E5%8C%AF%E5%85%A5%E7%AF%84%E4%BE%8B.csv?alt=media&token=1a978397-1bac-4e70-95fc-5bae5e454bdf"
-              color="secondary"
-              label="下載範例"
-              icon="download"
-              no-caps
-          />
+          <div class="mobile-hide">
+            <q-btn
+                color="primary"
+                label="匯入"
+                icon="publish"
+                no-caps
+                class="q-mr-sm"
+                @click="OpenUploadModal()"
+            />
+            <q-btn
+                color="negative"
+                icon-right="archive"
+                label="匯出"
+                no-caps
+                class="q-mr-sm"
+                @click="Export"
+            />
+            <q-btn
+                type="a"
+                href="https://firebasestorage.googleapis.com/v0/b/mpwei-logistics-system.appspot.com/o/example%2F%E8%B2%A8%E4%BB%B6%E5%88%97%E8%A1%A8-%E5%8C%AF%E5%85%A5%E7%AF%84%E4%BE%8B.csv?alt=media&token=1a978397-1bac-4e70-95fc-5bae5e454bdf"
+                color="secondary"
+                label="下載範例"
+                icon="download"
+                no-caps
+            />
+          </div>
         </template>
       </q-table>
     </div>
