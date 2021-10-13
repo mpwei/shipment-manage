@@ -3,6 +3,10 @@ const router = Router()
 const AuthMiddleware = require('../middlewares/auth')
 const admin = require('firebase-admin')
 const dayjs = require('dayjs')
+const utc = require('dayjs/plugin/utc')
+const timezone = require('dayjs/plugin/timezone')
+dayjs.extend(utc)
+dayjs.extend(timezone)
 
 router.post('/', AuthMiddleware, (req, res) => {
     return res.send('Shipment')
@@ -138,7 +142,7 @@ router.post('/import', FileMulter.single('upload'), AuthMiddleware, (req, res, n
             const CurrentLine = Line[i].split(',')
             for (let j = 0; j < Headers.length; j++) {
                 if (typeof CurrentLine[j] !== 'undefined') {
-                    TempObject[Schema[Headers[j].replace(/"/g, '').replace(/\r/g, '')]] = CurrentLine[j].replace(/"/g, '').replace(/\r/g, '')
+                    TempObject[Schema[Headers[j].replace(/"/g, '').replace(/\r/g, '').trim()]] = CurrentLine[j].replace(/"/g, '').replace(/\r/g, '')
                 }
             }
             Result.push(TempObject)
@@ -154,7 +158,7 @@ router.post('/import', FileMulter.single('upload'), AuthMiddleware, (req, res, n
         const Reference = Client.doc(item.ShipmentNo)
         return Batch.set(Reference, {
             ...item,
-            CreateTime: admin.firestore.Timestamp.fromMillis((dayjs().unix() + index) * 1000)
+            CreateTime: admin.firestore.Timestamp.fromMillis((dayjs().tz('Asia/Taipei').unix() + index) * 1000)
         }, {
             merge: true
         })
@@ -182,8 +186,8 @@ router.post('/export', AuthMiddleware, (req, res, next) => {
     let Client = admin.firestore().collection('Clients').doc(req.body.project).collection('Shipment')
     console.log(req.body.StartTime)
     console.log(req.body.EndTime)
-    const StartTime = admin.firestore.Timestamp.fromMillis(dayjs(req.body.StartTime).unix() * 1000)
-    const EndTime = admin.firestore.Timestamp.fromMillis(dayjs(req.body.EndTime).unix() * 1000)
+    const StartTime = admin.firestore.Timestamp.fromMillis(dayjs(req.body.StartTime).tz('Asia/Taipei').unix() * 1000)
+    const EndTime = admin.firestore.Timestamp.fromMillis(dayjs(req.body.EndTime).tz('Asia/Taipei').unix() * 1000)
     return Client.orderBy('UpdateTime').startAt(StartTime).endAt(EndTime).get().then((qs) => {
         const Result = []
         const Headers = ['ShipmentNo', 'Location', 'CreateTime', 'Operator', 'UpdateTime']
@@ -201,9 +205,9 @@ router.post('/export', AuthMiddleware, (req, res, next) => {
             Sheet.push({
                 ShipmentNo: doc.data().ShipmentNo,
                 Location: doc.data().Location,
-                CreateTime: dayjs(doc.data().CreateTime._seconds * 1000).format('YYYY-MM-DD HH:mm:ss'),
+                CreateTime: dayjs(doc.data().CreateTime._seconds * 1000).tz('Asia/Taipei').format('YYYY-MM-DD HH:mm:ss'),
                 Operator: doc.data().Operator,
-                UpdateTime: dayjs(doc.data().UpdateTime._seconds * 1000).format('YYYY-MM-DD HH:mm:ss')
+                UpdateTime: dayjs(doc.data().UpdateTime._seconds * 1000).tz('Asia/Taipei').format('YYYY-MM-DD HH:mm:ss')
             })
         })
 
