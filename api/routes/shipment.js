@@ -119,6 +119,7 @@ const FileMulter = Multer({
     },
     fileFilter: function (req, file, cb) {
         // ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-excel']
+        console.log(file.mimetype)
         if (!['text/csv', 'text/plain'].includes(file.mimetype)) {
             return cb(new Error('僅支援CSV或TXT檔'))
         }
