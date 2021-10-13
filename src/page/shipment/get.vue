@@ -83,6 +83,7 @@ export default {
             Data.value = {
               Message: ErrorCode[(error.code || error.Code)] || error.Message
             }
+            PlayVoiceMessage(ErrorCode[(error.code || error.Code)] || ErrorCode['SH-005'])
             $q.loadingBar.stop()
             $q.notify({
               type: 'negative',

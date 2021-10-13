@@ -241,7 +241,7 @@ router.get('/editAdmin', async (req, res, next) => {
 
     const setClaims = await auth.setCustomUserClaims(userRecord.uid, {
         ...userRecord.customClaims,
-        project: 'KSONG'
+        project: '38511707'
     }).then((r) => {
         console.log('yy')
         console.log(r)

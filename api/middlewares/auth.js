@@ -6,7 +6,6 @@ module.exports = function (req, res, next) {
             req.body.uid = decodedToken.uid
             req.body.project = decodedToken.project
             req.body.authUser = decodedToken
-            console.log(req.body)
             if (!req.body.project) {
                 return next({
                     Code: 'Forbidden',
