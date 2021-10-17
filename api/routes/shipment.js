@@ -50,7 +50,6 @@ router.post('/list', AuthMiddleware, async (req, res, next) => {
         Client = Client.where('Operator', '==', req.body.Operator)
     }
     Client = Client.orderBy('CreateTime', 'desc')
-    console.log(req.body.NextCreateTime)
     if (typeof req.body.NextCreateTime !== 'undefined') {
         NextCreateTime = admin.firestore.Timestamp.fromMillis(req.body.NextCreateTime._seconds * 1000)
         switch (req.body.Action) {
@@ -118,16 +117,14 @@ const FileMulter = Multer({
         fileSize: 1024 * 1024 * 5,
     },
     fileFilter: function (req, file, cb) {
-        // ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-excel']
-        console.log(file.mimetype)
-        if (!['text/csv', 'text/plain'].includes(file.mimetype)) {
-            return cb(new Error('僅支援CSV或TXT檔'))
+        if (!['text/csv', 'text/plain', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'].includes(file.mimetype)) {
+            return cb(new Error('僅支援CSV、XLS、XLSX或TXT檔'))
         }
 
         return cb(null, true)
     }
 })
-router.post('/import', FileMulter.single('upload'), AuthMiddleware, (req, res, next) => {
+router.post('/import', FileMulter.single('upload'), AuthMiddleware, async (req, res, next) => {
     let Result = []
     const Schema = {
         '匯入時間': 'CreateTime',
@@ -149,11 +146,35 @@ router.post('/import', FileMulter.single('upload'), AuthMiddleware, (req, res, n
             Result.push(TempObject)
         }
     } else {
-        const XLSXData = xlsx.read(req.file.buffer, {type: 'buffer', cellDates: true})
-        Result = xlsx.utils.sheet_to_json(XLSXData.Sheets[XLSXData.SheetNames[0]])
+        let XLSXData = xlsx.read(req.file.buffer, {type: 'buffer', cellDates: true})
+        XLSXData = xlsx.utils.sheet_to_json(XLSXData.Sheets[XLSXData.SheetNames[0]]) || []
+        XLSXData.forEach(item => {
+            Result.push({
+                ShipmentNo: item['貨件號碼'].toString(),
+                Location: item['到貨站']
+            })
+        })
     }
     let Client = admin.firestore().collection('Clients').doc(req.body.project).collection('Shipment')
-    const ImportData = Result.filter(item => item.ShipmentNo !== '') || []
+    let ImportData = Result.filter(item => item.ShipmentNo !== '' && typeof item.ShipmentNo !== 'undefined') || []
+
+    // 先判斷是否存在
+    const ExecuteIsExists = ImportData.map(item => {
+        return Client.doc(item.ShipmentNo).get().then((doc) => {
+            if (!doc.exists) {
+                return item
+            } else {
+                throw 'Data is exists.'
+            }
+        }).catch((error) => {
+            throw error
+        })
+    })
+
+    ImportData = await Promise.allSettled(ExecuteIsExists).then((result) => {
+        return result.filter(item => item.status === 'fulfilled').map(data => data.value)
+    })
+
     const Batch = admin.firestore().batch()
     ImportData.forEach((item, index) => {
         const Reference = Client.doc(item.ShipmentNo)

@@ -124,8 +124,8 @@ export default {
   setup () {
     const $q = useQuasar()
     const $router = useRouter()
-    const Permission = JSON.parse(localStorage.getItem('User')).Permission || {}
-    const NavPermission = Permission.Navigation || []
+    const Permission = JSON.parse(localStorage.getItem('User'))?.Permission || {}
+    const NavPermission = Permission?.Navigation || []
     const leftDrawerOpen = ref(false)
     const rightDrawerOpen = ref(false)
     const Logout = () => {
