@@ -15,12 +15,10 @@ import { useRouter } from 'vue-router'
 export default {
   name: 'ShipmentIndex',
   setup () {
-    const Permission = JSON.parse(localStorage.getItem('User')).Permission || {}
+    const Permission = JSON.parse(localStorage.getItem('User'))?.Permission || {}
     const FeaturePermission = Permission.Features?.shipment || []
     const $router = useRouter()
-    if (FeaturePermission.includes('list')) {
-      $router.replace('/shipment/list')
-    } else {
+    if (FeaturePermission.includes('get') &&  FeaturePermission.length === 1) {
       $router.replace('/shipment/get')
     }
     return {

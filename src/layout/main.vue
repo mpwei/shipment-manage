@@ -125,6 +125,12 @@ export default {
     const $q = useQuasar()
     const $router = useRouter()
     const Permission = JSON.parse(localStorage.getItem('User'))?.Permission || {}
+    const FeaturePermission = Permission.Features?.shipment || []
+    if (FeaturePermission.includes('list')) {
+      $router.replace('/shipment/list')
+    } else {
+      $router.replace('/shipment/get')
+    }
     const NavPermission = Permission?.Navigation || []
     const leftDrawerOpen = ref(false)
     const rightDrawerOpen = ref(false)
