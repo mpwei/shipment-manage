@@ -149,10 +149,12 @@ router.post('/import', FileMulter.single('upload'), AuthMiddleware, async (req, 
         let XLSXData = xlsx.read(req.file.buffer, {type: 'buffer', cellDates: true})
         XLSXData = xlsx.utils.sheet_to_json(XLSXData.Sheets[XLSXData.SheetNames[0]]) || []
         XLSXData.forEach(item => {
-            Result.push({
-                ShipmentNo: item['貨件號碼'].toString(),
-                Location: item['到貨站']
-            })
+            if (typeof item['貨件號碼'] !== 'undefined') {
+                Result.push({
+                    ShipmentNo: item['貨件號碼'].toString(),
+                    Location: item['到貨站']
+                })
+            }
         })
     }
     let Client = admin.firestore().collection('Clients').doc(req.body.project).collection('Shipment')
