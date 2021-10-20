@@ -20,6 +20,7 @@ if (!admin.apps.length) {
       databaseURL: process.env.VUE_APP_FIREBASE_DATABASEURL
   })
 }
+admin.firestore().settings({ignoreUndefinedProperties:true})
 
 // Require API routes
 const IndexRoute = require('./routes/index')
