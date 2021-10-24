@@ -27,7 +27,7 @@
 <script>
 import { ref } from 'vue'
 import { useQuasar } from 'quasar'
-import { FunctionServerRequest } from '../plugins/request'
+import { InnerServerRequest } from '../plugins/request'
 import { getAuth, signInWithEmailAndPassword } from 'firebase/auth'
 import ErrorCode from '../locales/error'
 import { useRouter } from 'vue-router'
@@ -42,7 +42,7 @@ export default {
     const Password = ref('')
     const DoLogin = () => {
       $q.loadingBar.start()
-      return FunctionServerRequest.post('/DoLogin', {
+      return InnerServerRequest.post('/auth/login', {
         Project: Project.value,
         Account: Account.value
       }).then(({ data }) => {

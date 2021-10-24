@@ -92,7 +92,7 @@ export default {
             })
           })
         }
-      }, 600)
+      }, 250)
       return Promise.resolve(true)
     }
 

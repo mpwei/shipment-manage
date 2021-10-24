@@ -24,11 +24,13 @@ admin.firestore().settings({ignoreUndefinedProperties:true})
 
 // Require API routes
 const IndexRoute = require('./routes/index')
+const AuthRoute = require('./routes/auth')
 const ShipmentRoute = require('./routes/shipment')
 const RecordRoute = require('./routes/record')
 
 // Import API Routes
 index.use(process.env.SERVER_PREFIX + '/', IndexRoute)
+index.use(process.env.SERVER_PREFIX + '/auth', AuthRoute)
 index.use(process.env.SERVER_PREFIX + '/record', RecordRoute)
 index.use(process.env.SERVER_PREFIX + '/shipment', ShipmentRoute)
 

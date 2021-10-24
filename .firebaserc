@@ -1,5 +1,14 @@
 {
   "projects": {
     "default": "mpwei-logistics-system"
-  }
+  },
+  "targets": {
+      "mpwei-logistics-system": {
+        "hosting": {
+          "shipment-management": [
+            "shipment-manage"
+          ]
+        }
+      }
+    }
 }

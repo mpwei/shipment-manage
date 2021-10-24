@@ -37,6 +37,7 @@
     "source": "functions"
   },
   "hosting": {
+    "target": "shipment-management",
     "public": "dist",
     "ignore": [
       "firebase.json",
