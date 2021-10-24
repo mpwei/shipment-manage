@@ -25,9 +25,11 @@ admin.firestore().settings({ignoreUndefinedProperties:true})
 // Require API routes
 const IndexRoute = require('./routes/index')
 const ShipmentRoute = require('./routes/shipment')
+const RecordRoute = require('./routes/record')
 
 // Import API Routes
 index.use(process.env.SERVER_PREFIX + '/', IndexRoute)
+index.use(process.env.SERVER_PREFIX + '/record', RecordRoute)
 index.use(process.env.SERVER_PREFIX + '/shipment', ShipmentRoute)
 
 // catch 404 and forward to error handler

@@ -5,22 +5,10 @@
       <div class="row">
         <div class="col-12">
           <div class="q-mb-md">
-            <q-btn-toggle
-                v-model="Mode"
-                spread
-                no-caps
-                unelevated
-                toggle-color="primary"
-                color="white"
-                text-color="primary"
-                :options="[{label: '掃描模式', value: 'Scan'},{label: '輸入模式', value: 'Keyboard'}]"
-                style="border: 1px solid #027be3"
-                @update:model-value="SwitchMode()"
-            />
             <div class="q-gutter-y-md column" style="max-width: 400px">
               <q-input stack-label v-model="Account" label="員工帳號" readonly />
               <q-input stack-label v-model="UserName" label="員工名稱" readonly />
-              <q-input stack-label v-model="ShipmentNo" label="揀貨單號" placeholder="輸入揀貨單號或掃描揀貨單上條碼" clearable />
+              <q-input ref="ShipmentNoInput" stack-label v-model="ShipmentNo" @blur="ShipmentNoInput.focus()" :autofocus="true" label="揀貨單號" placeholder="輸入揀貨單號或掃描揀貨單上條碼" clearable @update:model-value="Execute" />
             </div>
           </div>
         </div>
@@ -49,7 +37,8 @@ import 'webrtc-adapter'
 import RecordRTC from 'recordrtc'
 import 'videojs-record/dist/videojs.record.js'
 import { InnerServerRequest } from '../../plugins/request'
-import ErrorCode from "../../locales/error";
+import ErrorCode from '../../locales/error'
+import { getAuth, getIdToken } from 'firebase/auth'
 
 export default {
   name: 'VideoRecord',
@@ -59,15 +48,14 @@ export default {
     const UserName = ref(User.Name)
     const $q = useQuasar()
     const NotifyAudioComponent = ref(null)
-    const Mode = ref('Scan')
     const Keying = ref(false)
     const TempTerminalData = ref('')
-    const EnableExecute = ref(false)
     const ShipmentNo = ref('')
     const TerminalData = ref('')
     const player = ref('')
     const EnableRecord = ref(false)
     const CurrentAudioType = ref('Start')
+    const ShipmentNoInput = ref(null)
     const options = {
       controls: true,
       autoplay: false,
@@ -98,38 +86,38 @@ export default {
       return nextTick(() => {
         NotifyAudioComponent.value.currentTime = 0
         NotifyAudioComponent.value.play()
+        setTimeout(() => {
+          PlayVoiceMessage('開啟鏡頭')
+        }, 1000)
       })
     }
 
     const CloseCamera = () => {
       player.value.record().stopDevice()
       EnableRecord.value = false
+      PlayVoiceMessage('關閉鏡頭')
     }
 
     const StartRecord = () => {
       if (EnableRecord.value === false) {
-        CurrentAudioType.value = 'Error'
         return nextTick(() => {
           $q.notify({
             type: 'negative',
             message: '錯誤',
             caption: '請開啟鏡頭'
           })
-          NotifyAudioComponent.value.currentTime = 0
-          NotifyAudioComponent.value.play()
+          PlayVoiceMessage('請開啟鏡頭')
           return false
         })
       }
       if (ShipmentNo.value === '') {
-        CurrentAudioType.value = 'Error'
         return nextTick(() => {
           $q.notify({
             type: 'warning',
             message: '警告',
-            caption: '請輸入揀貨單號後以繼續錄影'
+            caption: '未輸入揀貨單號'
           })
-          NotifyAudioComponent.value.currentTime = 0
-          NotifyAudioComponent.value.play()
+          PlayVoiceMessage('未輸入揀貨單號')
           return false
         })
       }
@@ -138,6 +126,9 @@ export default {
       return nextTick(() => {
         NotifyAudioComponent.value.currentTime = 0
         NotifyAudioComponent.value.play()
+        setTimeout(() => {
+          PlayVoiceMessage('開始錄影')
+        }, 1000)
       })
     }
 
@@ -150,56 +141,17 @@ export default {
       })
     }
 
-    const FunctionRelate = {
-      'o': OpenCamera,
-      'c': CloseCamera,
-      's': StartRecord,
-      'e': EndRecord
-    }
-
-    const TempInput = ref('')
-    const KeyIn = (event) => {
-      switch (event.key) {
-        case 'Shift':
-          break
-        case '!':
-          EnableExecute.value = true
-          break
-        case 'Enter':
-          if (EnableExecute.value === true) {
-            EnableExecute.value = false
-          } else {
-            ShipmentNo.value = TempInput.value
-            TempInput.value = ''
-          }
-          break
-        case 'o':
-        case 'c':
-        case 's':
-        case 'e':
-          if (EnableExecute.value === true) {
-            FunctionRelate[event.key]()
-          } else {
-            TempInput.value += event.key
-          }
-          break
-        default:
-          TempInput.value += event.key
-          break
-      }
-      // console.log(event)
-    }
-
-    const SwitchMode = () => {
-      if (Mode.value === 'Scan') {
-        window.addEventListener('keydown', KeyIn, false)
-      } else {
-        window.removeEventListener('keydown', KeyIn, false)
-      }
+    const PlayVoiceMessage = (msg) => {
+      const VoiceMessage = new SpeechSynthesisUtterance()
+      VoiceMessage.text = msg
+      VoiceMessage.lang = 'zh'
+      VoiceMessage.volume = 50
+      VoiceMessage.rate = 0.7
+      VoiceMessage.pitch = 1.5
+      speechSynthesis.speak(VoiceMessage)
     }
 
     onMounted(() => {
-      SwitchMode()
 
       player.value = videojs('#myVideo', options, () => {
         // print version information at startup
@@ -221,36 +173,39 @@ export default {
       })
 
       // user completed recording and stream is available
-      player.value.on('finishRecord', () => {
-        // the blob object contains the recorded data that
-        // can be downloaded by the user, stored on server etc.
+      player.value.on('finishRecord', async () => {
         console.log('finished recording:')
         console.log(player.value.recordedData)
         // player.value.record().saveAs({'video': 'my-video-file-name.webm'})
 
         const data = new FormData()
-        // data.append('name', 'A0001-0001.mp4')
         data.append('name', `${ShipmentNo.value}-${Account.value}-${dayjs().format('YYYYMMDDHHmmss')}.mp4`)
         data.append('file', player.value.recordedData)
 
+        const Auth = getAuth()
+        const Token = await getIdToken(Auth.currentUser)
+
         $q.loadingBar.start()
-        InnerServerRequest.post('/upload/local', data, {
-          header : {
+        InnerServerRequest.post('/record/upload', data, {
+          headers: {
+            'xx-csrf-token': Token,
             'Content-Type' : 'multipart/form-data'
           }
-        }).then(response => {
+        }).then(() => {
           $q.loadingBar.stop()
-          console.log('response', response)
+          PlayVoiceMessage('儲存成功')
           ShipmentNo.value = ''
           $q.notify({
             type: 'positive',
             color: 'green-7',
             textColor: 'white',
             message: '成功',
-            caption: '已成功存至硬碟'
+            caption: '儲存成功'
           })
         }).catch(error => {
           $q.loadingBar.stop()
+          PlayVoiceMessage('儲存錯誤')
+          ShipmentNo.value = ''
           console.log('error', error)
           $q.notify({
             type: 'negative',
@@ -278,7 +233,7 @@ export default {
     })
 
     return {
-      Mode,
+      ShipmentNoInput,
       NotifyAudioComponent,
       ShipmentNo,
       Account,
@@ -296,7 +251,6 @@ export default {
         End: '../audio/end.wav',
         Error: '../audio/error.wav'
       },
-      SwitchMode,
       OpenCamera,
       CloseCamera,
       StartRecord,
@@ -308,25 +262,29 @@ export default {
           TerminalData.value = ''
           if (TempTerminalData.value === value) {
             value = value.replace(/\n/g, '')
-            if (value === '@enop_abcemw' || value === '@open_webcam') {
+            if (value === '!o' || value.includes('!o')) {
+              ShipmentNo.value = value.replace(/!o/g, '')
               OpenCamera()
               return true
             }
-            if (value === '@celos_abcemw' || value === '@close_webcam') {
+            if (value === '!c' || value.includes('!c')) {
+              ShipmentNo.value = value.replace(/!c/g, '')
               CloseCamera()
               return true
             }
-            if (value === '@ars_cdeo' || value === '@start_record') {
+            if (value === '!s' || value.includes('!s')) {
+              ShipmentNo.value = value.replace(/!s/g, '')
               StartRecord()
               return true
             }
-            if (value === '@den_cdeo' || value === '@end_record') {
+            if (value === '!e' || value.includes('!e')) {
+              ShipmentNo.value = value.replace(/!e/g, '')
               EndRecord()
               return true
             }
             ShipmentNo.value = value
           }
-        }, 1000)
+        }, 250)
       }
     }
   }

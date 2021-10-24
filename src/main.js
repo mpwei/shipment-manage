@@ -5,6 +5,7 @@ import quasarUserOptions from './quasar-user-options'
 import Router from './router'
 import { auth } from './plugins/firebase'
 import Store from './store'
+import './registerServiceWorker'
 
 createApp(App).use(Router).use(Store).use(Quasar, quasarUserOptions).mount('#app')
 

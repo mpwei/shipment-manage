@@ -30,8 +30,4 @@ router.post('/upload/local', FileMulter.single('file'), (req, res) => {
     return res.send('OK')
 })
 
-router.post('/upload/cloud', FileMulter.single('file'), (req, res) => {
-    return res.send('OK')
-})
-
 module.exports = router

@@ -5,9 +5,9 @@
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
-    "start": "node ./api/bin/www",
     "lint": "vue-cli-service lint",
-    "serve:start": "nodemon --exec vue-cli-service serve"
+    "serve:start": "nodemon --exec vue-cli-service serve",
+    "start": "node ./api/bin/www"
   },
   "dependencies": {
     "axios": "^0.21.1",
@@ -17,12 +17,14 @@
     "express": "^4.17.1",
     "firebase-admin": "^9.12.0",
     "multer": "^1.4.3",
+    "register-service-worker": "^1.7.1",
     "xlsx": "^0.17.2"
   },
   "devDependencies": {
     "@quasar/extras": "^1.0.0",
     "@vue/cli-plugin-babel": "~4.5.0",
     "@vue/cli-plugin-eslint": "~4.5.0",
+    "@vue/cli-plugin-pwa": "^4.5.14",
     "@vue/cli-service": "~4.5.0",
     "@vue/compiler-sfc": "^3.0.0",
     "babel-eslint": "^10.1.0",
@@ -37,9 +39,9 @@
     "sass-loader": "^10.1.0",
     "videojs-record": "^4.5.0",
     "vue": "^3.0.0",
+    "vue-cli-plugin-quasar": "~4.0.2",
     "vue-router": "^4.0.11",
-    "vuex": "^4.0.2",
-    "vue-cli-plugin-quasar": "~4.0.2"
+    "vuex": "^4.0.2"
   },
   "eslintConfig": {
     "root": true,

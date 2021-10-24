@@ -46,7 +46,6 @@ export default {
     }
 
     const Execute = (value) => {
-      console.log(value)
       Data.value = {}
       if (value === '') {
         return Promise.resolve(true)
@@ -84,6 +83,7 @@ export default {
               Message: ErrorCode[(error.code || error.Code)] || error.Message
             }
             PlayVoiceMessage(ErrorCode[(error.code || error.Code)] || ErrorCode['SH-005'])
+            ShipmentNo.value = ''
             $q.loadingBar.stop()
             $q.notify({
               type: 'negative',

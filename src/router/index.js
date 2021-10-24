@@ -13,7 +13,7 @@ const Routes = [
                 children: [
                     { path: '/record/list', component: () => import('../page/record/list') },
                     { path: '/record/device', component: () => import('../page/record/device') },
-                    { path: '/record/settings', component: () => import('../page/record/settings') },
+                    { path: '/record/setting', component: () => import('../page/record/setting') },
                     { path: '/record/qrcode', component: () => import('../page/record/qrcode') },
                     { path: '/record/create', component: () => import('../page/record/create') }
                 ]

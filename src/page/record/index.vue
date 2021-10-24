@@ -2,8 +2,9 @@
   <main class="q-pa-lg">
     <h1 class="text-h4 text-weight-bold q-mt-none q-mb-md">揀貨錄影</h1>
     <q-tabs active-color="primary" indicator-color="primary" align="left">
-      <q-route-tab v-if="FeaturePermission.includes('create')" to="/record/create" exact label="現場作業" />
       <q-route-tab v-if="FeaturePermission.includes('list')" to="/record/list" exact label="歷史紀錄" />
+      <q-route-tab v-if="FeaturePermission.includes('create')" to="/record/create" exact label="現場作業" />
+      <q-route-tab v-if="FeaturePermission.includes('setting')" to="/record/setting" exact label="設定" />
     </q-tabs>
     <q-separator />
     <router-view />

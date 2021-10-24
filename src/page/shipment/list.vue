@@ -122,7 +122,6 @@ export default {
     })
     const NextCreateTime = ref(null)
     const GetList = async (props) => {
-      console.log(props)
       Loading.value = true
       const Auth = getAuth()
       const Token = await getIdToken(Auth.currentUser)

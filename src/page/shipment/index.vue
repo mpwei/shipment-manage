@@ -18,8 +18,10 @@ export default {
     const Permission = JSON.parse(localStorage.getItem('User'))?.Permission || {}
     const FeaturePermission = Permission.Features?.shipment || []
     const $router = useRouter()
-    if (FeaturePermission.includes('get') &&  FeaturePermission.length === 1) {
+    if (FeaturePermission.includes('get') && FeaturePermission.length === 1) {
       $router.replace('/shipment/get')
+    } else {
+      $router.replace('/shipment/list')
     }
     return {
       FeaturePermission
