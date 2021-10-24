@@ -45,9 +45,19 @@
     ],
     "rewrites": [
       {
+        "source": "/api/**",
+        "run": {
+          "serviceId": "mpwei-shipment-management",
+          "region": "asia-east1"
+        }
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }
+    ],
+    "headers": [
+      { "source":"/api/**", "headers": [{"key": "Cache-Control", "value": "no-cache, no-store"}] }
     ]
   }
 }
