@@ -170,7 +170,7 @@ export default {
             caption: error.Message || ErrorCode[error.code]
           })
         })
-      }, 1500)
+      }, 1200)
     })
 
     let IdToken = ''

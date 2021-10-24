@@ -12,13 +12,42 @@ const FileMulter = Multer({
     },
 })
 
-router.post('list', (req, res, next) => {
-
+router.post('/list', AuthMiddleware, async (req, res, next) => {
+    const Bucket = admin.storage().bucket(req.body.storageBucket || 'mpwei-logistics-system.appspot.com')
+    let prefix =  `Clients/${req.body.project}/Record/${req.body.SelectDate || dayjs().format('YYYY-MM-DD')}`
+    if (typeof req.body.EntryTag !== 'undefined' && req.body.EntryTag !== '') {
+        prefix += `/${req.body.EntryTag}`
+    }
+    console.log(prefix)
+    const [files] = await Bucket.getFiles({
+        prefix
+    })
+    const List = files.map(file => {
+        console.log(file)
+        return {
+            Path: file.name,
+            Name: file.name.split('/')[file.name.split('/').length - 1],
+            CreateTime: dayjs(file.metadata.timeCreated).format('YYYY-MM-DD HH:mm:ss'),
+            Size: file.metadata.size,
+            ContentType: file.metadata.contentType,
+            PublicURL: file.publicUrl()
+        }
+    })
+    return res.send({
+        Code: 200,
+        Message: 'Success',
+        Data: List
+    })
 })
 
 router.post('/upload', FileMulter.single('file'), AuthMiddleware, (req, res, next) => {
     const Bucket = admin.storage().bucket(req.body.storageBucket || 'mpwei-logistics-system.appspot.com')
-    const Blob = Bucket.file(`Clients/${req.body.project}/Record/${dayjs().format('YYYY-MM-DD')}/${req.body.name}`)
+    let Path = `Clients/${req.body.project}/Record/${dayjs().format('YYYY-MM-DD')}`
+    if (typeof req.body.EntryTag !== 'undefined') {
+        Path += `/${req.body.EntryTag}`
+    }
+    Path += `/${req.body.name}`
+    const Blob = Bucket.file(Path)
     const BlobStream = Blob.createWriteStream({
         contentType: req.file.mimetype,
         predefinedAcl: 'publicRead'
@@ -29,7 +58,7 @@ router.post('/upload', FileMulter.single('file'), AuthMiddleware, (req, res, nex
     })
 
     BlobStream.on('finish', async () => {
-        await Bucket.file(`Clients/${req.body.project}/Record/${dayjs().format('YYYY-MM-DD')}/${req.body.name}`).getSignedUrl({
+        await Bucket.file(Path).getSignedUrl({
             action: 'read',
             expires: Date.now() + 60000 * 60 * 24 * 365 * 20
         }).then((url) => {

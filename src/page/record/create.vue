@@ -179,7 +179,12 @@ export default {
         // player.value.record().saveAs({'video': 'my-video-file-name.webm'})
 
         const data = new FormData()
-        data.append('name', `${ShipmentNo.value}-${Account.value}-${dayjs().format('YYYYMMDDHHmmss')}.mp4`)
+        let fileName = `${ShipmentNo.value}-${Account.value}-${dayjs().format('YYYYMMDDHHmmss')}.mp4`
+        if (localStorage.getItem('EntryTag')) {
+          data.append('EntryTag', localStorage.getItem('EntryTag'))
+          fileName = `${localStorage.getItem('EntryTag')}-${ShipmentNo.value}-${Account.value}-${dayjs().format('YYYYMMDDHHmmss')}.mp4`
+        }
+        data.append('name', fileName)
         data.append('file', player.value.recordedData)
 
         const Auth = getAuth()
