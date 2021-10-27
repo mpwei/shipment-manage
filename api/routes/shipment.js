@@ -128,8 +128,8 @@ router.post('/import', FileMulter.single('upload'), AuthMiddleware, async (req, 
     let Result = []
     const Schema = {
         '匯入時間': 'CreateTime',
-        '貨件號碼': 'ShipmentNo',
-        '到貨站': 'Location',
+        '清關條碼': 'ShipmentNo',
+        '目的地': 'Location',
     }
     if (req.file.mimetype === 'text/csv' || req.file.mimetype === 'text/plain') {
         const CSVData = Buffer.from(req.file.buffer).toString()
@@ -149,10 +149,10 @@ router.post('/import', FileMulter.single('upload'), AuthMiddleware, async (req, 
         let XLSXData = xlsx.read(req.file.buffer, {type: 'buffer', cellDates: true})
         XLSXData = xlsx.utils.sheet_to_json(XLSXData.Sheets[XLSXData.SheetNames[0]]) || []
         XLSXData.forEach(item => {
-            if (typeof item['貨件號碼'] !== 'undefined') {
+            if (typeof item['清關條碼'] !== 'undefined') {
                 Result.push({
-                    ShipmentNo: item['貨件號碼'].toString(),
-                    Location: item['到貨站']
+                    ShipmentNo: item['清關條碼'].toString(),
+                    Location: item['目的地']
                 })
             }
         })
@@ -236,8 +236,8 @@ router.post('/export', AuthMiddleware, (req, res, next) => {
         const Headers = ['ShipmentNo', 'Location', 'CreateTime', 'Operator', 'UpdateTime']
         const Sheet = [
             {
-                ShipmentNo: '貨件號碼',
-                Location: '到貨站',
+                ShipmentNo: '清關條碼',
+                Location: '目的地',
                 CreateTime: '匯入時間',
                 Operator: '作業人員',
                 UpdateTime: '最後作業時間',
