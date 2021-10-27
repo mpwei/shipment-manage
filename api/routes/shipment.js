@@ -177,23 +177,42 @@ router.post('/import', FileMulter.single('upload'), AuthMiddleware, async (req, 
         return result.filter(item => item.status === 'fulfilled').map(data => data.value)
     })
 
-    const Batch = admin.firestore().batch()
-    ImportData.forEach((item, index) => {
-        const Reference = Client.doc(item.ShipmentNo)
-        return Batch.set(Reference, {
-            ...item,
-            CreateTime: admin.firestore.Timestamp.fromMillis((dayjs().tz('Asia/Taipei').unix() + index) * 1000)
-        }, {
-            merge: true
+    const Chunks = []
+    const Size = 10
+    for (let i = 0, j = ImportData.length; i < j; i += Size) {
+        Chunks.push(ImportData.slice(i, i + Size))
+    }
+
+    const ExecuteTrunks = Chunks.map((ImportData) => {
+        return admin.firestore().runTransaction((transaction) => {
+            const Executes = []
+            ImportData.forEach((item, index) => {
+                const Reference = Client.doc(item.ShipmentNo)
+                Executes.push(
+                    transaction.set(Reference, {
+                        ...item,
+                        CreateTime: admin.firestore.Timestamp.fromMillis((dayjs().tz('Asia/Taipei').unix() + index) * 1000)
+                    }, {
+                        merge: true
+                    })
+                )
+            })
+            Executes.push(
+                transaction.set(admin.firestore().collection('Clients').doc(req.body.project), {
+                    ShipmentCount: admin.firestore.FieldValue.increment(ImportData.length)
+                }, {
+                    merge: true
+                })
+            )
+            return Promise.all(Executes).catch((error) => {
+                throw error
+            })
+        }).catch((error) => {
+            throw error
         })
     })
-    Batch.set(admin.firestore().collection('Clients').doc(req.body.project), {
-        ShipmentCount: admin.firestore.FieldValue.increment(ImportData.length)
-    }, {
-        merge: true
-    })
 
-    return Batch.commit().then(() => {
+    return Promise.all(ExecuteTrunks).then(() => {
         return res.send({
             Code: '200',
             Message: 'Success'

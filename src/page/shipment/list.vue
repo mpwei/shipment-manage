@@ -1,16 +1,29 @@
 <template>
   <main class="q-py-lg">
     <div class="container-sm">
-      <q-btn-group spread class="desktop-hide q-mb-md text-center full-width">
-        <q-btn color="primary" label="匯入" @click="OpenUploadModal()" />
-        <q-btn color="negative" label="匯出" @click="OpenExportModal()" />
-        <q-btn
-            color="secondary"
-            label="下載範例"
-            type="a"
-            href="https://firebasestorage.googleapis.com/v0/b/mpwei-logistics-system.appspot.com/o/example%2F%E8%B2%A8%E4%BB%B6%E5%88%97%E8%A1%A8-%E5%8C%AF%E5%85%A5%E7%AF%84%E4%BE%8B.csv?alt=media&token=1a978397-1bac-4e70-95fc-5bae5e454bdf"
-        />
-      </q-btn-group>
+      <div class="row q-col-gutter-md q-mb-md">
+        <div class="col-md-6 col-lg-4 col-12">
+          <q-input filled stack-label v-model="Filter.ShipmentNo" label="貨件號碼" placeholder="輸入貨件號碼可篩選出單一貨件" @update:model-value="GetList" />
+        </div>
+        <div class="col-md-6 col-lg-4 col-12">
+          <q-input filled stack-label v-model="Filter.Location" label="到貨站" placeholder="輸入到貨站可篩選出該到貨站的所有貨件" @update:model-value="GetList" />
+        </div>
+        <div class="col-md-6 col-lg-4 col-12">
+          <q-btn-group spread unelevated class="text-center full-width">
+            <q-btn stack icon="publish" color="grey-3" text-color="grey-7" label="匯入" @click="OpenUploadModal()" />
+            <q-btn stack icon="archive" color="grey-3" text-color="grey-7" label="匯出" @click="OpenExportModal()" />
+            <q-btn
+                stack
+                text-color="grey-7"
+                icon="download"
+                color="grey-3"
+                label="下載範例"
+                type="a"
+                href="https://firebasestorage.googleapis.com/v0/b/mpwei-logistics-system.appspot.com/o/example%2F%E8%B2%A8%E4%BB%B6%E5%88%97%E8%A1%A8-%E5%8C%AF%E5%85%A5%E7%AF%84%E4%BE%8B.csv?alt=media&token=1a978397-1bac-4e70-95fc-5bae5e454bdf"
+            />
+          </q-btn-group>
+        </div>
+      </div>
       <q-table
           :loading="Loading"
           :rows="Data"
@@ -20,34 +33,6 @@
           :rows-per-page-options="[10, 20]"
           @request="GetList"
       >
-        <template v-slot:top-right>
-          <div class="mobile-hide">
-            <q-btn
-                color="primary"
-                label="匯入"
-                icon="publish"
-                no-caps
-                class="q-mr-sm"
-                @click="OpenUploadModal()"
-            />
-            <q-btn
-                color="negative"
-                icon="archive"
-                label="匯出"
-                no-caps
-                class="q-mr-sm"
-                @click="OpenExportModal()"
-            />
-            <q-btn
-                type="a"
-                href="https://firebasestorage.googleapis.com/v0/b/mpwei-logistics-system.appspot.com/o/example%2F%E8%B2%A8%E4%BB%B6%E5%88%97%E8%A1%A8-%E5%8C%AF%E5%85%A5%E7%AF%84%E4%BE%8B.csv?alt=media&token=1a978397-1bac-4e70-95fc-5bae5e454bdf"
-                color="secondary"
-                label="下載匯入範例"
-                icon="download"
-                no-caps
-            />
-          </div>
-        </template>
       </q-table>
     </div>
     <q-dialog ref="dialogRef" @hide="onDialogHide">
@@ -91,7 +76,7 @@ export default {
   name: 'ShipmentList',
   setup () {
     const $q = useQuasar()
-    const Filter = (value, type) => {
+    const ColumnFilter = (value, type) => {
       if (typeof value === 'undefined') {
         return '--'
       }
@@ -104,13 +89,17 @@ export default {
       }
     }
     const Columns = [
-      { name: 'ShipmentNo', align: 'left', label: '貨件號碼', field: 'ShipmentNo', format: val => Filter(val, 'ShipmentNo') },
-      { name: 'Location', align: 'left', label: '到貨站', field: 'Location', format: val => Filter(val, 'Location') },
-      { name: 'CreateTime', align: 'left', label: '匯入時間', field: 'CreateTime', format: val => Filter(val, 'CreateTime') },
-      { name: 'Operator', align: 'left', label: '作業人員', field: 'Operator', format: val => Filter(val, 'Operator') },
-      { name: 'UpdateTime', align: 'left', label: '最後作業時間', field: 'UpdateTime', format: val => Filter(val, 'CreateTime') },
+      { name: 'ShipmentNo', align: 'left', label: '貨件號碼', field: 'ShipmentNo', format: val => ColumnFilter(val, 'ShipmentNo') },
+      { name: 'Location', align: 'left', label: '到貨站', field: 'Location', format: val => ColumnFilter(val, 'Location') },
+      { name: 'CreateTime', align: 'left', label: '匯入時間', field: 'CreateTime', format: val => ColumnFilter(val, 'CreateTime') },
+      { name: 'Operator', align: 'left', label: '作業人員', field: 'Operator', format: val => ColumnFilter(val, 'Operator') },
+      { name: 'UpdateTime', align: 'left', label: '最後作業時間', field: 'UpdateTime', format: val => ColumnFilter(val, 'CreateTime') },
     ]
 
+    const Filter = ref({
+      ShipmentNo: '',
+      Location: ''
+    })
     const Data = ref([])
     const Loading = ref(false)
     const Pagination = ref({
@@ -128,15 +117,25 @@ export default {
       const Condition = {
         PerPage: Pagination.value.rowsPerPage
       }
-      if (props && props.pagination.page < Pagination.value.page) {
-        Condition.Action = 'Prev'
-        Condition.NextCreateTime = NextCreateTime.value
+      if (props) {
+        if (props.pagination?.page < Pagination.value?.page) {
+          Condition.Action = 'Prev'
+          Condition.NextCreateTime = NextCreateTime.value
+        }
+        if (props.pagination?.page > Pagination.value?.page) {
+          Condition.Action = 'Next'
+          Condition.NextCreateTime = NextCreateTime.value
+        }
       }
-      if (props && props.pagination.page > Pagination.value.page) {
-        Condition.Action = 'Next'
-        Condition.NextCreateTime = NextCreateTime.value
+      const SendData = {
+        ...Condition
       }
-      return InnerServerRequest.post('/shipment/list', Condition, {
+      Object.keys(Filter.value).forEach((key) => {
+        if (Filter.value[key] !== '') {
+          SendData[key] = Filter.value[key]
+        }
+      })
+      return InnerServerRequest.post('/shipment/list', SendData, {
         headers: {
           'xx-csrf-token': Token
         }
@@ -177,6 +176,7 @@ export default {
     const { dialogRef, onDialogHide } = useDialogPluginComponent()
 
     return {
+      Filter,
       Loading,
       Columns,
       Data,
