@@ -227,8 +227,6 @@ router.post('/import', FileMulter.single('upload'), AuthMiddleware, async (req, 
 
 router.post('/export', AuthMiddleware, (req, res, next) => {
     let Client = admin.firestore().collection('Clients').doc(req.body.project).collection('Shipment')
-    console.log(req.body.StartTime)
-    console.log(req.body.EndTime)
     const StartTime = admin.firestore.Timestamp.fromMillis(dayjs(req.body.StartTime).tz('Asia/Taipei').unix() * 1000)
     const EndTime = admin.firestore.Timestamp.fromMillis(dayjs(req.body.EndTime).tz('Asia/Taipei').unix() * 1000)
     return Client.orderBy('UpdateTime').startAt(StartTime).endAt(EndTime).get().then((qs) => {

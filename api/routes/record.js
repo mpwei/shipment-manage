@@ -18,12 +18,10 @@ router.post('/list', AuthMiddleware, async (req, res, next) => {
     if (typeof req.body.EntryTag !== 'undefined' && req.body.EntryTag !== '') {
         prefix += `/${req.body.EntryTag}`
     }
-    console.log(prefix)
     const [files] = await Bucket.getFiles({
         prefix
     })
     const List = files.map(file => {
-        console.log(file)
         return {
             Path: file.name,
             Name: file.name.split('/')[file.name.split('/').length - 1],
