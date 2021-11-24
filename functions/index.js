@@ -55,3 +55,37 @@ exports.DoLogin = functions.region('asia-east1').https.onRequest(async (req, res
         }
     })
 })
+
+// exports.EditAdmin = functions.region('asia-east1').https.onRequest(async (req, res, next) => {
+//     // const db = admin.firestore()
+//     const auth = admin.auth()
+//
+//     const userRecord = await auth.getUser(req.query.id).then((userRecord) => {
+//         console.log(userRecord)
+//         return userRecord
+//     }).catch((err) => {
+//         next(err)
+//     })
+//
+//     const setClaims = await auth.setCustomUserClaims(userRecord.uid, {
+//         ...userRecord.customClaims,
+//         project: 'GINTEN'
+//     }).then((r) => {
+//         console.log('yy')
+//         console.log(r)
+//         console.log('xx')
+//         return true
+//     }).catch((err) => {
+//         throw err
+//     })
+//
+//     return Promise.all([
+//         setClaims,
+//         // Edit,
+//         // setPermission
+//     ]).then((r) => {
+//         return res.send("success!")
+//     }).catch((err) => {
+//         return res.send("error: " + err)
+//     })
+// })

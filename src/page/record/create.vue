@@ -15,10 +15,10 @@
         <div class="col-12">
           <video id="myVideo" class="video-js vjs-default-skin" playsinline />
           <div class=" q-mt-md">
-            <q-btn unelevated color="light-green-8" class="q-mb-sm q-mr-sm" label="開啟鏡頭" @click="OpenCamera()" />
-            <q-btn unelevated color="light-green-8" class="q-mb-sm q-mr-sm" label="關閉鏡頭" @click="CloseCamera()" />
-            <q-btn unelevated color="light-green-8" class="q-mb-sm q-mr-sm" label="開始錄影" @click="StartRecord()" :disable="!EnableRecord" />
-            <q-btn unelevated color="light-green-8" class="q-mb-sm" label="停止錄影" @click="EndRecord()" :disable="!EnableRecord" />
+<!--            <q-btn unelevated color="light-green-8" class="q-mb-sm q-mr-sm" label="開啟鏡頭" @click="OpenCamera()" />-->
+<!--            <q-btn unelevated color="light-green-8" class="q-mb-sm q-mr-sm" label="關閉鏡頭" @click="CloseCamera()" />-->
+            <q-btn unelevated color="light-green-8" class="q-mb-sm q-mr-sm" label="開始錄影" @click="StartRecord2()" />
+            <q-btn unelevated color="light-green-8" class="q-mb-sm" label="停止錄影" @click="EndRecord()" />
           </div>
         </div>
       </div>
@@ -138,6 +138,48 @@ export default {
       return nextTick(() => {
         NotifyAudioComponent.value.currentTime = 0
         NotifyAudioComponent.value.play()
+        player.value.record().stopDevice()
+        EnableRecord.value = false
+      })
+    }
+
+    const OpenCameraPromise = () => {
+      return new Promise((resolve) => {
+        player.value.record().getDevice()
+        EnableRecord.value = true
+        NotifyAudioComponent.value.currentTime = 0
+        NotifyAudioComponent.value.play()
+        setTimeout(() => {
+          PlayVoiceMessage('開啟鏡頭')
+          resolve()
+        }, 1000)
+      })
+    }
+
+    const StartRecord2 = () => {
+      if (ShipmentNo.value === '') {
+        return nextTick(() => {
+          $q.notify({
+            type: 'warning',
+            message: '警告',
+            caption: '未輸入揀貨單號'
+          })
+          PlayVoiceMessage('未輸入揀貨單號')
+          return false
+        })
+      }
+      return OpenCameraPromise().then(() => {
+        setTimeout(() => {
+          CurrentAudioType.value = 'Start'
+          player.value.record().start()
+          return nextTick(() => {
+            NotifyAudioComponent.value.currentTime = 0
+            NotifyAudioComponent.value.play()
+            setTimeout(() => {
+              PlayVoiceMessage('開始錄影')
+            }, 1000)
+          })
+        }, 4000)
       })
     }
 
@@ -259,6 +301,7 @@ export default {
       OpenCamera,
       CloseCamera,
       StartRecord,
+      StartRecord2,
       EndRecord,
       Execute (value) {
         Keying.value = true
@@ -279,7 +322,8 @@ export default {
             }
             if (value === '!s' || value.includes('!s')) {
               ShipmentNo.value = value.replace(/!s/g, '')
-              StartRecord()
+              // StartRecord()
+              StartRecord2()
               return true
             }
             if (value === '!e' || value.includes('!e')) {

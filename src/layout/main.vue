@@ -76,13 +76,13 @@
         :breakpoint="1200"
     >
       <div class="q-pa-md">
-        <q-field label="開啟鏡頭" stack-label>
-          <template v-slot:control>
-            <div class="self-center full-width no-outline q-mt-md" tabindex="0">
-              <img src="../assets/open.svg" class="full-width">
-            </div>
-          </template>
-        </q-field>
+<!--        <q-field label="開啟鏡頭" stack-label>-->
+<!--          <template v-slot:control>-->
+<!--            <div class="self-center full-width no-outline q-mt-md" tabindex="0">-->
+<!--              <img src="../assets/open.svg" class="full-width">-->
+<!--            </div>-->
+<!--          </template>-->
+<!--        </q-field>-->
         <q-field label="開始錄影" stack-label>
           <template v-slot:control>
             <div class="self-center full-width no-outline q-mt-md" tabindex="0">
@@ -97,13 +97,13 @@
             </div>
           </template>
         </q-field>
-        <q-field label="關閉鏡頭" stack-label>
-          <template v-slot:control>
-            <div class="self-center full-width no-outline q-mt-md" tabindex="0">
-              <img src="../assets/close.svg" class="full-width">
-            </div>
-          </template>
-        </q-field>
+<!--        <q-field label="關閉鏡頭" stack-label>-->
+<!--          <template v-slot:control>-->
+<!--            <div class="self-center full-width no-outline q-mt-md" tabindex="0">-->
+<!--              <img src="../assets/close.svg" class="full-width">-->
+<!--            </div>-->
+<!--          </template>-->
+<!--        </q-field>-->
       </div>
     </q-drawer>
 
