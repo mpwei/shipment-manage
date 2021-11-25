@@ -19,10 +19,10 @@ export default {
     const Permission = JSON.parse(localStorage.getItem('User')).Permission || {}
     const FeaturePermission = Permission.Features?.record || []
     const $router = useRouter()
-    if (FeaturePermission.includes('list')) {
-      $router.replace('/record/list')
-    } else {
+    if (!FeaturePermission.includes('list')) {
       $router.replace('/record/create')
+    } else {
+      $router.replace('/record/list')
     }
     return {
       FeaturePermission

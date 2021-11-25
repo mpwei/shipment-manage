@@ -13,10 +13,8 @@
           </div>
         </div>
         <div class="col-12">
-          <video id="myVideo" class="video-js vjs-default-skin" playsinline />
-          <div class=" q-mt-md">
-<!--            <q-btn unelevated color="light-green-8" class="q-mb-sm q-mr-sm" label="開啟鏡頭" @click="OpenCamera()" />-->
-<!--            <q-btn unelevated color="light-green-8" class="q-mb-sm q-mr-sm" label="關閉鏡頭" @click="CloseCamera()" />-->
+          <video ref="VideoPlayer" id="myVideo" class="video-js vjs-default-skin" playsinline />
+          <div class="q-mt-md">
             <q-btn unelevated color="light-green-8" class="q-mb-sm q-mr-sm" label="開始錄影" @click="StartRecord2()" />
             <q-btn unelevated color="light-green-8" class="q-mb-sm" label="停止錄影" @click="EndRecord()" />
           </div>
@@ -44,6 +42,7 @@ export default {
   name: 'VideoRecord',
   setup () {
     const User = JSON.parse(localStorage.getItem('User'))
+    const VideoPlayer = ref(null)
     const Account = ref(User.Account)
     const UserName = ref(User.Name)
     const $q = useQuasar()
@@ -195,7 +194,7 @@ export default {
 
     onMounted(() => {
 
-      player.value = videojs('#myVideo', options, () => {
+      player.value = videojs(VideoPlayer.value, options, () => {
         // print version information at startup
         const msg = 'Using video.js ' + videojs.VERSION +
             ' with videojs-record ' + videojs.getPluginVersion('record') +
@@ -280,6 +279,7 @@ export default {
     })
 
     return {
+      VideoPlayer,
       ShipmentNoInput,
       NotifyAudioComponent,
       ShipmentNo,
