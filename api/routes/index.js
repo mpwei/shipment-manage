@@ -7,7 +7,7 @@ const Multer = require('multer')
 const FileMulter = Multer({
     storage: Multer.diskStorage({
         destination (req, file, cb) {
-            const Dir = `./storage/${dayjs().format('YYYY-MM-DD')}`
+            const Dir = `./storage/${dayjs().tz('Asia/Taipei').format('YYYY-MM-DD')}`
             if (!fs.existsSync(Dir)){
                 fs.mkdirSync(Dir, { recursive: true });
             }

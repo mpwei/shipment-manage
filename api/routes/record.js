@@ -4,6 +4,11 @@ const admin = require('firebase-admin')
 const dayjs = require('dayjs')
 const Multer = require('multer')
 const AuthMiddleware = require('../middlewares/auth')
+const utc = require('dayjs/plugin/utc')
+const timezone = require('dayjs/plugin/timezone')
+
+dayjs.extend(utc)
+dayjs.extend(timezone)
 
 const FileMulter = Multer({
     storage: Multer.memoryStorage(),
@@ -14,7 +19,7 @@ const FileMulter = Multer({
 
 router.post('/list', AuthMiddleware, async (req, res, next) => {
     const Bucket = admin.storage().bucket(req.body.storageBucket || 'mpwei-logistics-system.appspot.com')
-    let prefix =  `Clients/${req.body.project}/Record/${req.body.SelectDate || dayjs().format('YYYY-MM-DD')}`
+    let prefix =  `Clients/${req.body.project}/Record/${req.body.SelectDate || dayjs().tz('Asia/Taipei').format('YYYY-MM-DD')}`
     if (typeof req.body.EntryTag !== 'undefined' && req.body.EntryTag !== '') {
         prefix += `/${req.body.EntryTag}`
     }
@@ -25,7 +30,7 @@ router.post('/list', AuthMiddleware, async (req, res, next) => {
         return {
             Path: file.name,
             Name: file.name.split('/')[file.name.split('/').length - 1],
-            CreateTime: dayjs(file.metadata.timeCreated).format('YYYY-MM-DD HH:mm:ss'),
+            CreateTime: dayjs(file.metadata.timeCreated).tz('Asia/Taipei').format('YYYY-MM-DD HH:mm:ss'),
             Size: file.metadata.size,
             ContentType: file.metadata.contentType,
             PublicURL: file.publicUrl()
@@ -40,7 +45,7 @@ router.post('/list', AuthMiddleware, async (req, res, next) => {
 
 router.post('/upload', FileMulter.single('file'), AuthMiddleware, (req, res, next) => {
     const Bucket = admin.storage().bucket(req.body.storageBucket || 'mpwei-logistics-system.appspot.com')
-    let Path = `Clients/${req.body.project}/Record/${dayjs().format('YYYY-MM-DD')}`
+    let Path = `Clients/${req.body.project}/Record/${dayjs().tz('Asia/Taipei').format('YYYY-MM-DD')}`
     if (typeof req.body.EntryTag !== 'undefined') {
         Path += `/${req.body.EntryTag}`
     }
