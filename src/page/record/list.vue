@@ -21,8 +21,8 @@
           :loading="Loading"
           :rows="Data"
           :columns="Columns"
+          :pagination="{rowsPerPage: 10}"
           row-key="Name"
-          hide-bottom
       >
         <template v-slot:body-cell-Action="props">
           <q-td :props="props">
