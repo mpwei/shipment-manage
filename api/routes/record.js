@@ -13,7 +13,7 @@ dayjs.extend(timezone)
 const FileMulter = Multer({
     storage: Multer.memoryStorage(),
     limits: {
-        fileSize: 1024 * 1024 * 5,
+        fileSize: 1024 * 1024 * 10,
     },
 })
 
